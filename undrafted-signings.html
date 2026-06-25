@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Undrafted Signings · HoopsMatic</title>
+<style>
+  /* --- HoopsMatic Design System (light theme, DM Sans) --- */
+  :root {
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --surface-hover: #f0f0f2;
+    --border: #d1d1d6;
+    --text: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-muted: #8e8e93;
+    --accent: #b45309;
+    --accent-hover: #92400e;
+    --accent-light: rgba(180, 83, 9, 0.08);
+    --green: #16a34a;
+    --purple: #7c3aed;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    overflow-x: clip;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+  /* Header */
+  header {
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
+  }
+  h1 { font-size: 1.5rem; margin: 0 0 0.25rem; font-weight: 700; }
+  .subtitle { color: var(--text-secondary); font-size: 0.9rem; margin: 0; }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+  }
+  .legend .key { display: inline-flex; align-items: center; gap: 0.35rem; }
+
+  /* Action bar */
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  .btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.55rem 0.9rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.1s, border-color 0.1s;
+  }
+  .btn:hover { background: var(--surface-hover); border-color: var(--text-muted); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .btn-success { background: var(--green) !important; color: #fff !important; border-color: var(--green) !important; }
+
+  .meta {
+    margin-left: auto;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  /* Loading + empty states */
+  .state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); font-size: 0.95rem; }
+  .state.error { color: #b91c1c; }
+
+  /* Team sections */
+  .team-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+  .team-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--accent-light);
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .team-name { color: var(--accent); }
+  .team-header .team-count { margin-left: auto; }
+  .team-count {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--surface);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .player-list { padding: 0.5rem 0; }
+  .player-row {
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .player-row:first-child { border-top: none; }
+  .player-name { flex: 1; }
+
+  /* Contract-type badge (replaces the draft-rank badge) */
+  .type-badge {
+    display: inline-block;
+    min-width: 42px;
+    text-align: center;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 0.6rem;
+    border: 1px solid;
+    letter-spacing: 0.02em;
+  }
+  .type-2w  { color: var(--purple); background: rgba(124,58,237,0.10); border-color: rgba(124,58,237,0.30); }
+  .type-e10 { color: var(--accent); background: var(--accent-light);   border-color: rgba(180,83,9,0.22); }
+  .type-sl  { color: var(--text-muted); background: var(--bg);         border-color: var(--border); }
+  .type-other { color: var(--text-secondary); background: var(--bg);   border-color: var(--border); }
+
+  .player-row .meta-tag {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    border: 1px solid;
+    letter-spacing: 0.04em;
+  }
+  .meta-tag.dc { color: #1d4ed8; background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.3); }
+  .meta-tag.gl { color: #047857; background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.3); }
+  .meta-tag.draft { color: var(--accent); background: var(--accent-light); border-color: rgba(180,83,9,0.25); }
+
+  /* Footer summary */
+  .summary {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+  .summary strong { color: var(--text); font-weight: 700; }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 1.25rem; }
+    .container { padding: 1rem 0.75rem 3rem; }
+    .meta { width: 100%; margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Undrafted Signings</h1>
+    <p class="subtitle">Undrafted free agents signed by NBA teams · grouped by team, then by player last name</p>
+  </header>
+
+  <div class="legend">
+    <span class="key"><span class="type-badge type-2w">2W</span> Two-Way</span>
+    <span class="key"><span class="type-badge type-e10">E10</span> Exhibit 10</span>
+    <span class="key"><span class="type-badge type-sl">SL</span> Summer League</span>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="btnCopyPresto">📷 Copy Presto Code</button>
+    <button class="btn" id="btnRefresh">↻ Refresh</button>
+    <span class="meta" id="metaInfo">Loading…</span>
+  </div>
+
+  <div id="content">
+    <div class="state">Loading signings…</div>
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  // Configuration
+  // ============================================================
+  // The Worker proxies the source sheets at these endpoints.
+  //  - Sheet10 (gid 326032081): the undrafted-signings list (name, team, type)
+  //  - Sheet4 Section B: the prospect bio block (position, school, age, combine)
+  const SIGNINGS_URL = 'https://hoopsmatic.com/api/rm-undrafted';
+  const BIO_URL      = 'https://hoopsmatic.com/api/rm-draft';
+
+  // Sheet10 columns (0-based, NO header row)
+  const COL_S_NAME = 0;   // player
+  const COL_S_TEAM = 1;   // team (full short name, e.g. "LA Lakers")
+  const COL_S_TYPE = 2;   // contract type: 2W / E10 / SL
+
+  // Sheet4 bio columns (0-based) — same indices used by Draft Workouts / RM
+  const COL_BIO_NAME       = 26;  // PLAYER (bio block)
+  const COL_BIRTH_DATE     = 27;
+  const COL_AGE_YEARS      = 32;
+  const COL_AGE_DAYS       = 33;
+  const COL_POSITION       = 36;
+  const COL_PRE_DRAFT_TEAM = 37;  // school / pre-draft team
+  const COL_ENTERED_DRAFT  = 38;
+  const COL_DRAFT_COMBINE  = 39;
+  const COL_GL_COMBINE     = 40;
+
+  // Contract-type display + ordering
+  const TYPE_LABEL = { '2W': 'Two-Way', 'E10': 'Exhibit 10', 'SL': 'Summer League' };
+  const TYPE_CLASS = { '2W': 'type-2w', 'E10': 'type-e10', 'SL': 'type-sl' };
+  const TYPE_ORDER = { '2W': 0, 'E10': 1, 'SL': 2 };
+
+  // ============================================================
+  // CSV parsing — handles quoted fields with embedded commas
+  // ============================================================
+  function parseCSV(text) {
+    const rows = [];
+    let cur = [''], inQ = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQ) {
+        if (c === '"' && text[i + 1] === '"') { cur[cur.length - 1] += '"'; i++; }
+        else if (c === '"') inQ = false;
+        else cur[cur.length - 1] += c;
+      } else {
+        if (c === '"') inQ = true;
+        else if (c === ',') cur.push('');
+        else if (c === '\n') { rows.push(cur); cur = ['']; }
+        else if (c !== '\r') cur[cur.length - 1] += c;
+      }
+    }
+    if (cur.length > 1 || cur[0]) rows.push(cur);
+    return rows;
+  }
+
+  // ============================================================
+  // State
+  // ============================================================
+  let signingsByTeam = {};   // { teamName: [ { name, type, position, school, age, dc, gl, declared } ] }
+  let totalSignings = 0;
+  let totalTeams = 0;
+  let typeCounts = {};
+  let lastFetchTime = null;
+
+  function lastName(n) {
+    const parts = String(n || '').trim().split(/\s+/);
+    return parts[parts.length - 1] || String(n || '');
+  }
+  function sortSignings(a, b) {
+    const ta = (a.type in TYPE_ORDER) ? TYPE_ORDER[a.type] : 9;
+    const tb = (b.type in TYPE_ORDER) ? TYPE_ORDER[b.type] : 9;
+    if (ta !== tb) return ta - tb;
+    return lastName(a.name).localeCompare(lastName(b.name));
+  }
+
+  // ============================================================
+  // Fetch
+  // ============================================================
+  async function fetchSignings(forceRefresh) {
+    try {
+      const opts = forceRefresh ? { cache: 'no-store' } : {};
+      const bust = forceRefresh ? '?nocache=1' : '';
+      const [sResp, bResp] = await Promise.all([
+        fetch(SIGNINGS_URL + bust, opts),
+        fetch(BIO_URL + bust, opts)
+      ]);
+      const sRows = parseCSV(await sResp.text());
+      const bRows = parseCSV(await bResp.text());
+
+      // Build a bio map keyed by player name from Sheet4 Section B.
+      const bioByName = {};
+      for (let i = 1; i < bRows.length; i++) {
+        const nm = (bRows[i][COL_BIO_NAME] || '').trim();
+        if (!nm) continue;
+        const birthDate = (bRows[i][COL_BIRTH_DATE] || '').trim();
+        const ageYears  = (bRows[i][COL_AGE_YEARS]  || '').trim();
+        const ageDays   = (bRows[i][COL_AGE_DAYS]   || '').trim();
+        const age = (birthDate && ageYears && ageDays
+          && !isNaN(parseInt(ageYears)) && !isNaN(parseInt(ageDays)))
+          ? `${ageYears}-${ageDays}` : '';
+        bioByName[nm] = {
+          position: (bRows[i][COL_POSITION] || '').trim(),
+          school:   (bRows[i][COL_PRE_DRAFT_TEAM] || '').trim(),
+          age,
+          declared: (bRows[i][COL_ENTERED_DRAFT] || '').trim().toUpperCase() === 'YES',
+          dc:       (bRows[i][COL_DRAFT_COMBINE] || '').trim().toUpperCase() === 'YES',
+          gl:       (bRows[i][COL_GL_COMBINE]    || '').trim().toUpperCase() === 'YES',
+        };
+      }
+
+      // Walk Sheet10 (no header row) and group signings by team.
+      signingsByTeam = {};
+      totalSignings = 0;
+      typeCounts = {};
+      for (let i = 0; i < sRows.length; i++) {
+        const name = (sRows[i][COL_S_NAME] || '').trim();
+        const team = (sRows[i][COL_S_TEAM] || '').trim();
+        const type = (sRows[i][COL_S_TYPE] || '').trim();
+        if (!name || !team) continue;
+        const low = name.toLowerCase();
+        if (low === 'player' || low === 'name') continue; // guard a stray header
+        const bio = bioByName[name] || {};
+        if (!signingsByTeam[team]) signingsByTeam[team] = [];
+        signingsByTeam[team].push({ name, type, ...bio });
+        typeCounts[type] = (typeCounts[type] || 0) + 1;
+        totalSignings++;
+      }
+
+      for (const t of Object.keys(signingsByTeam)) signingsByTeam[t].sort(sortSignings);
+      totalTeams = Object.keys(signingsByTeam).length;
+      lastFetchTime = new Date();
+      render();
+    } catch (e) {
+      console.error('[Undrafted] fetch failed:', e);
+      document.getElementById('content').innerHTML =
+        `<div class="state error">Failed to load signings: ${escapeHTML(e.message || String(e))}</div>`;
+      document.getElementById('metaInfo').textContent = 'Error';
+    }
+  }
+
+  // ============================================================
+  // Render
+  // ============================================================
+  function typeBadge(type) {
+    const cls = TYPE_CLASS[type] || 'type-other';
+    const label = TYPE_LABEL[type] || type || '';
+    return `<span class="type-badge ${cls}" title="${escapeHTML(label)}">${escapeHTML(type || '—')}</span>`;
+  }
+
+  function render() {
+    const meta = document.getElementById('metaInfo');
+    meta.textContent = `${totalSignings} signing${totalSignings === 1 ? '' : 's'} · ${totalTeams} teams · updated ${lastFetchTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+    if (totalSignings === 0) {
+      document.getElementById('content').innerHTML =
+        '<div class="state">No undrafted signings yet. Add rows to Sheet10 (player, team, type).</div>';
+      return;
+    }
+
+    const teamNames = Object.keys(signingsByTeam).sort();
+    let html = '';
+    for (const team of teamNames) {
+      const players = signingsByTeam[team];
+      html += `<section class="team-section">
+        <header class="team-header">
+          <span class="team-name">${escapeHTML(team)}</span>
+          <span class="team-count">${players.length} signing${players.length === 1 ? '' : 's'}</span>
+        </header>
+        <div class="player-list">`;
+      for (const p of players) {
+        const tags = [];
+        if (p.declared) tags.push('<span class="meta-tag draft">Declared</span>');
+        if (p.dc) tags.push('<span class="meta-tag dc">DC</span>');
+        if (p.gl) tags.push('<span class="meta-tag gl">GL</span>');
+        const subtitle = [p.position, p.school, p.age].filter(Boolean).join(' · ');
+        html += `<div class="player-row">
+          ${typeBadge(p.type)}
+          <span class="player-name"><strong>${escapeHTML(p.name)}</strong>${subtitle ? ` <span style="color:var(--text-muted);font-size:.78rem">— ${escapeHTML(subtitle)}</span>` : ''}</span>
+          ${tags.join('')}
+        </div>`;
+      }
+      html += `</div></section>`;
+    }
+
+    // Footer summary with the type breakdown.
+    const parts = ['2W', 'E10', 'SL'].filter(t => typeCounts[t]).map(t => `<strong>${typeCounts[t]}</strong> ${TYPE_LABEL[t]}`);
+    html += `<div class="summary"><strong>${totalSignings}</strong> undrafted signings across <strong>${totalTeams}</strong> teams${parts.length ? ' — ' + parts.join(' · ') : ''}.</div>`;
+
+    document.getElementById('content').innerHTML = html;
+  }
+
+  function escapeHTML(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ============================================================
+  // Presto code generation — plain, copy-pastable structure
+  // ============================================================
+  function generatePresto() {
+    const teamNames = Object.keys(signingsByTeam).sort();
+    if (!teamNames.length) return '';
+
+    let out = '<div class="us-wrap" style="font-family:sans-serif;max-width:700px;margin:0 auto">\n';
+    out += '  <p style="margin:0 0 .8em">With the draft in the books, here\u2019s a running list of undrafted free agents who have signed with NBA teams \u2014 two-way contracts (2W), Exhibit 10 deals (E10) and Summer League invites (SL).</p>\n';
+    out += '  <p style="margin:0 0 1em;font-size:.9em;color:#666"><em>2W = Two-Way \u00B7 E10 = Exhibit 10 \u00B7 SL = Summer League.</em></p>\n';
+
+    for (const team of teamNames) {
+      const players = signingsByTeam[team];
+      out += `  <h3 style="margin:1.2em 0 .3em;font-size:1.1em;border-bottom:2px solid #b45309;padding-bottom:.15em">${escapeHTML(team)}</h3>\n`;
+      out += `  <ul style="list-style:none;margin:.2em 0 .8em 0;padding:0">\n`;
+      for (const p of players) {
+        const subtitle = [p.position, p.school, p.age].filter(Boolean).join(', ');
+        const t = p.type || '\u2014';
+        // 4-char monospace prefix so names align across rows.
+        const pad = '\u00A0'.repeat(Math.max(0, 4 - t.length));
+        const colour = t === '2W' ? '#7c3aed' : (t === 'E10' ? '#b45309' : '#888');
+        const prefix = `<strong style="color:${colour};font-family:monospace">${escapeHTML(t)}${pad}</strong>`;
+        out += `    <li style="margin:.15em 0">${prefix}\u00A0\u00A0\u00A0${escapeHTML(p.name)}`;
+        if (subtitle) out += ` <span style="color:#666;font-size:.9em">(${escapeHTML(subtitle)})</span>`;
+        out += `</li>\n`;
+      }
+      out += `  </ul>\n`;
+    }
+    out += '</div>';
+    return out;
+  }
+
+  function copyPresto() {
+    const code = generatePresto();
+    const btn = document.getElementById('btnCopyPresto');
+    if (!code) { flashButton(btn, 'Nothing to copy', false); return; }
+    const blob = new Blob([code], { type: 'text/plain' });
+    if (navigator.clipboard && navigator.clipboard.write) {
+      navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })])
+        .then(() => flashButton(btn, '✓ Copied!', true))
+        .catch(() => fallbackCopy(code, btn));
+    } else {
+      fallbackCopy(code, btn);
+    }
+  }
+
+  function fallbackCopy(text, btn) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); flashButton(btn, '✓ Copied!', true); }
+    catch (e) { flashButton(btn, 'Copy failed', false); }
+    document.body.removeChild(ta);
+  }
+
+  function flashButton(btn, msg, success) {
+    btn.textContent = msg;
+    if (success) btn.classList.add('btn-success');
+    setTimeout(() => { btn.textContent = '📷 Copy Presto Code'; btn.classList.remove('btn-success'); }, 2000);
+  }
+
+  // ============================================================
+  // Wire up + boot
+  // ============================================================
+  document.getElementById('btnCopyPresto').addEventListener('click', copyPresto);
+  document.getElementById('btnRefresh').addEventListener('click', () => fetchSignings(true));
+
+  fetchSignings(false);
+</script>
+</body>
+</html>
