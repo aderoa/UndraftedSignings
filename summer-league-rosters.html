@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Summer League Rosters · HoopsMatic</title>
-<!-- HoopsMatic · Summer League Rosters · v1.0 -->
+<!-- HoopsMatic · Summer League Rosters · v1.1 -->
 <style>
   /* --- HoopsMatic Design System (light theme, DM Sans) --- */
   :root {
@@ -158,7 +158,7 @@
 
 <script>
   // ============================================================
-  // Summer League Rosters — v1.0
+  // Summer League Rosters — v1.1
   // ============================================================
   // Roster source: Sheet10 (gid 326032081), served via /api/rm-undrafted.
   //   - Left block  (cols 0-2): the original undrafted-signings list.
@@ -166,14 +166,12 @@
   //   We read NAME + TEAM from both blocks and ignore the contract/status
   //   columns (no 2W / E10 / SL / TWO-WAY / DRAFTED badges on this page).
   //
-  // Bio source: per spec the bio "database" lives on gid 1889032294.
-  //   That tab is NOT yet exposed by the Worker, so until a dedicated
-  //   endpoint (e.g. /api/rm-sl-bio) is added we fall back to the existing
-  //   draft-bio block (/api/rm-draft, Sheet4 Section B) so drafted/declared
-  //   players still show position / school / age. Swap BIO_URL + the COL_BIO_*
-  //   indices below once gid 1889032294's layout is wired up.
+  // Bio source: Sheet2 (gid 1889032294), served via /api/rm-sl-bio. The Worker
+  //   exposes only the bio slice Sheet2!S:AG, so the served CSV is re-indexed
+  //   from S=0 (see COL_BIO_* below). Matched to the roster by normalized name.
+  //   The bio fetch is best-effort: if it fails, names still render.
   const ROSTER_URL = 'https://hoopsmatic.com/api/rm-undrafted';
-  const BIO_URL    = 'https://hoopsmatic.com/api/rm-draft';   // interim — see note above
+  const BIO_URL    = 'https://hoopsmatic.com/api/rm-sl-bio';   // Sheet2!S:AG
 
   // Sheet10 roster columns (0-based, NO header row)
   const COL_L_NAME = 0;   // left block: player
@@ -181,13 +179,13 @@
   const COL_R_NAME = 8;   // right block: player
   const COL_R_TEAM = 10;  // right block: team
 
-  // Bio columns (0-based) — currently the Sheet4 draft-bio block.
-  // When gid 1889032294 is wired, point these at its name/position/school/age columns.
-  const COL_BIO_NAME       = 26;  // PLAYER (bio block)
-  const COL_AGE_YEARS      = 32;
-  const COL_AGE_DAYS       = 33;
-  const COL_POSITION       = 36;
-  const COL_PRE_DRAFT_TEAM = 37;  // school / pre-draft team
+  // Bio columns — 0-based within the Sheet2!S:AG slice the Worker serves
+  // (S=0). Source-sheet letters shown for reference.
+  const COL_BIO_NAME     = 0;   // S  — PLAYER
+  const COL_BIO_COUNTRY  = 4;   // W  — COUNTRY (reserved for future flags)
+  const COL_BIO_AGE      = 8;   // AA — "X years and Y days"
+  const COL_BIO_SCHOOL   = 10;  // AC — school / pre-draft team
+  const COL_BIO_POSITION = 14;  // AG — position
 
   // ============================================================
   // CSV parsing — handles quoted fields with embedded commas
@@ -261,14 +259,10 @@
       for (let i = 1; i < bRows.length; i++) {
         const nm = (bRows[i][COL_BIO_NAME] || '').trim();
         if (!nm) continue;
-        const ageYears = (bRows[i][COL_AGE_YEARS] || '').trim();
-        const ageDays  = (bRows[i][COL_AGE_DAYS]  || '').trim();
-        const age = (ageYears && ageDays && !isNaN(parseInt(ageYears)) && !isNaN(parseInt(ageDays)))
-          ? `${ageYears}-${ageDays}` : '';
         bioByName[normName(nm)] = {
-          position: (bRows[i][COL_POSITION] || '').trim(),
-          school:   (bRows[i][COL_PRE_DRAFT_TEAM] || '').trim(),
-          age,
+          position: (bRows[i][COL_BIO_POSITION] || '').trim(),
+          school:   (bRows[i][COL_BIO_SCHOOL]   || '').trim(),
+          age:      (bRows[i][COL_BIO_AGE]       || '').trim(),
         };
       }
     } catch (e) {
