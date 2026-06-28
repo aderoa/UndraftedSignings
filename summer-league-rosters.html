@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Summer League Rosters · HoopsMatic</title>
-<!-- HoopsMatic · Summer League Rosters · v1.1 -->
+<!-- HoopsMatic · Summer League Rosters · v1.2 -->
 <style>
   /* --- HoopsMatic Design System (light theme, DM Sans) --- */
   :root {
@@ -118,6 +118,8 @@
   .player-row:first-child { border-top: none; }
   .player-name { flex: 1; }
   .player-bio { color: var(--text-muted); font-size: 0.78rem; }
+  .player-flag { display: inline-block; width: 1.5rem; text-align: center; font-size: 1.05rem; margin-right: 0.4rem; flex: 0 0 auto; }
+  .player-flag-empty { font-size: 1rem; }
 
   /* Footer summary */
   .summary {
@@ -158,7 +160,7 @@
 
 <script>
   // ============================================================
-  // Summer League Rosters — v1.1
+  // Summer League Rosters — v1.2
   // ============================================================
   // Roster source: Sheet10 (gid 326032081), served via /api/rm-undrafted.
   //   - Left block  (cols 0-2): the original undrafted-signings list.
@@ -186,6 +188,36 @@
   const COL_BIO_AGE      = 8;   // AA — "X years and Y days"
   const COL_BIO_SCHOOL   = 10;  // AC — school / pre-draft team
   const COL_BIO_POSITION = 14;  // AG — position
+
+  // ============================================================
+  // Nationality flags (country string as it appears in COUNTRY col → emoji)
+  // ============================================================
+  const FLAGS = {
+    'United States': '🇺🇸', 'USA': '🇺🇸', 'United States of America': '🇺🇸',
+    'Australia': '🇦🇺', 'Canada': '🇨🇦', 'Germany': '🇩🇪', 'Puerto Rico': '🇵🇷',
+    'Nigeria': '🇳🇬', 'Netherlands': '🇳🇱', 'Mali': '🇲🇱', 'Italy': '🇮🇹',
+    'Spain': '🇪🇸', 'New Zealand': '🇳🇿', 'South Korea': '🇰🇷', 'Korea': '🇰🇷',
+    'Estonia': '🇪🇪', 'United Kingdom': '🇬🇧', 'UK': '🇬🇧', 'Great Britain': '🇬🇧',
+    'Mongolia': '🇲🇳', 'Russia': '🇷🇺', 'Dominican Republic': '🇩🇴', 'Mexico': '🇲🇽',
+    'Trinidad and Tobago': '🇹🇹', 'Israel': '🇮🇱',
+    // common NBA nationalities (buffer for future signings)
+    'France': '🇫🇷', 'Serbia': '🇷🇸', 'Slovenia': '🇸🇮', 'Greece': '🇬🇷',
+    'Croatia': '🇭🇷', 'Lithuania': '🇱🇹', 'Latvia': '🇱🇻', 'Turkey': '🇹🇷',
+    'Cameroon': '🇨🇲', 'Senegal': '🇸🇳', 'DR Congo': '🇨🇩', 'Democratic Republic of the Congo': '🇨🇩',
+    'Brazil': '🇧🇷', 'Argentina': '🇦🇷', 'Venezuela': '🇻🇪', 'Bahamas': '🇧🇸',
+    'Japan': '🇯🇵', 'China': '🇨🇳', 'Philippines': '🇵🇭', 'Georgia': '🇬🇪',
+    'Ukraine': '🇺🇦', 'Montenegro': '🇲🇪', 'Bosnia and Herzegovina': '🇧🇦',
+    'Czech Republic': '🇨🇿', 'Poland': '🇵🇱', 'Finland': '🇫🇮', 'Sweden': '🇸🇪',
+    'Switzerland': '🇨🇭', 'Austria': '🇦🇹', 'Belgium': '🇧🇪', 'Portugal': '🇵🇹',
+    'Ireland': '🇮🇪', 'Egypt': '🇪🇬', 'South Sudan': '🇸🇸', 'Sudan': '🇸🇩',
+    'Angola': '🇦🇴', 'Guinea': '🇬🇳', 'Ivory Coast': '🇨🇮', "Cote d'Ivoire": '🇨🇮',
+    'Cape Verde': '🇨🇻', 'Jamaica': '🇯🇲', 'Tanzania': '🇹🇿', 'India': '🇮🇳',
+    'Colombia': '🇨🇴', 'Panama': '🇵🇦', 'Slovakia': '🇸🇰', 'Romania': '🇷🇴',
+  };
+  function flagFor(country) {
+    const c = (country || '').trim();
+    return FLAGS[c] || '';
+  }
 
   // ============================================================
   // CSV parsing — handles quoted fields with embedded commas
@@ -263,6 +295,7 @@
           position: (bRows[i][COL_BIO_POSITION] || '').trim(),
           school:   (bRows[i][COL_BIO_SCHOOL]   || '').trim(),
           age:      (bRows[i][COL_BIO_AGE]       || '').trim(),
+          country:  (bRows[i][COL_BIO_COUNTRY]   || '').trim(),
         };
       }
     } catch (e) {
@@ -285,7 +318,7 @@
       seen.add(key);
       const bio = bioByName[normName(name)] || {};
       if (!rosterByTeam[team]) rosterByTeam[team] = [];
-      rosterByTeam[team].push({ name, position: bio.position || '', school: bio.school || '', age: bio.age || '' });
+      rosterByTeam[team].push({ name, position: bio.position || '', school: bio.school || '', age: bio.age || '', country: bio.country || '' });
       totalPlayers++;
     }
 
@@ -327,7 +360,9 @@
         <div class="player-list">`;
       for (const p of players) {
         const subtitle = [p.position, p.school, p.age].filter(Boolean).join(' · ');
+        const flag = flagFor(p.country);
         html += `<div class="player-row">
+          ${flag ? `<span class="player-flag" title="${escapeHTML(p.country)}">${flag}</span>` : '<span class="player-flag player-flag-empty"></span>'}
           <span class="player-name"><strong>${escapeHTML(p.name)}</strong>${subtitle ? ` <span class="player-bio">— ${escapeHTML(subtitle)}</span>` : ''}</span>
         </div>`;
       }
@@ -362,7 +397,8 @@
       out += `  <ul style="list-style:none;margin:.2em 0 .8em 0;padding:0">\n`;
       for (const p of players) {
         const subtitle = [p.position, p.school, p.age].filter(Boolean).join(', ');
-        out += `    <li style="margin:.15em 0">${escapeHTML(p.name)}`;
+        const flag = flagFor(p.country);
+        out += `    <li style="margin:.15em 0">${flag ? flag + '\u00A0\u00A0' : ''}${escapeHTML(p.name)}`;
         if (subtitle) out += ` <span style="color:#666;font-size:.9em">(${escapeHTML(subtitle)})</span>`;
         out += `</li>\n`;
       }
