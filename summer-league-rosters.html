@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Summer League Rosters · HoopsMatic</title>
-<!-- HoopsMatic · Summer League Rosters · v1.3 -->
+<!-- HoopsMatic · Summer League Rosters · v1.4 -->
 <style>
   /* --- HoopsMatic Design System (light theme, DM Sans) --- */
   :root {
@@ -376,9 +376,7 @@
         <div class="player-list">`;
       for (const p of players) {
         const subtitle = [p.position, p.school, p.age].filter(Boolean).join(' · ');
-        const flag = flagFor(p.country);
         html += `<div class="player-row">
-          ${flag ? `<span class="player-flag" title="${escapeHTML(p.country)}">${flag}</span>` : '<span class="player-flag player-flag-empty"></span>'}
           <span class="player-name"><strong>${escapeHTML(p.name)}</strong>${subtitle ? ` <span class="player-bio">— ${escapeHTML(subtitle)}</span>` : ''}</span>
         </div>`;
       }
@@ -413,8 +411,7 @@
       out += `  <ul style="list-style:none;margin:.2em 0 .8em 0;padding:0">\n`;
       for (const p of players) {
         const subtitle = [p.position, p.school, p.age].filter(Boolean).join(', ');
-        const flag = flagFor(p.country);
-        out += `    <li style="margin:.15em 0">${flag ? flag + '\u00A0\u00A0' : ''}${escapeHTML(p.name)}`;
+        out += `    <li style="margin:.15em 0">${escapeHTML(p.name)}`;
         if (subtitle) out += ` <span style="color:#666;font-size:.9em">(${escapeHTML(subtitle)})</span>`;
         out += `</li>\n`;
       }
