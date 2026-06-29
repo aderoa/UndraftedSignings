@@ -340,11 +340,15 @@
   // Render
   // ============================================================
   // Which Summer Leagues a team plays. Vegas: all 30 teams (always listed last).
-  // Matched by nickname with word boundaries so "Nets" never catches "Hornets".
+  // Sheet team names are city-only (e.g. "Atlanta", "Golden State", "LA Lakers"),
+  // so match on city OR nickname. Word boundaries keep "Nets" from catching "Hornets".
   function summerLeagues(team) {
+    const t = team || '';
     const leagues = [];
-    if (/\b(Nets|Warriors|Lakers|Heat|Bucks|Kings|Spurs)\b/.test(team)) leagues.push('California Classic');
-    if (/\b(Hawks|Grizzlies|Thunder|Jazz)\b/.test(team)) leagues.push('Salt Lake City Summer League');
+    if (/\b(Brooklyn|Nets|Golden State|Warriors|Lakers|Miami|Heat|Milwaukee|Bucks|Sacramento|Kings|San Antonio|Spurs)\b/i.test(t))
+      leagues.push('California Classic');
+    if (/\b(Atlanta|Hawks|Memphis|Grizzlies|Oklahoma|OKC|Thunder|Utah|Jazz)\b/i.test(t))
+      leagues.push('Salt Lake City Summer League');
     leagues.push('Vegas Summer League');
     return leagues.join(', ');
   }
