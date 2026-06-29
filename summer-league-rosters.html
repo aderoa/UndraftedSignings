@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Summer League Rosters · HoopsMatic</title>
-<!-- HoopsMatic · Summer League Rosters · v1.2 -->
+<!-- HoopsMatic · Summer League Rosters · v1.3 -->
 <style>
   /* --- HoopsMatic Design System (light theme, DM Sans) --- */
   :root {
@@ -96,6 +96,7 @@
     font-size: 0.95rem;
   }
   .team-name { color: var(--accent); }
+  .team-leagues { color: var(--text-muted); font-size: 0.78rem; font-weight: 500; margin-left: 0.4rem; }
   .team-header .team-count { margin-left: auto; }
   .team-count {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
@@ -338,6 +339,16 @@
   // ============================================================
   // Render
   // ============================================================
+  // Which Summer Leagues a team plays. Vegas: all 30 teams (always listed last).
+  // Matched by nickname with word boundaries so "Nets" never catches "Hornets".
+  function summerLeagues(team) {
+    const leagues = [];
+    if (/\b(Nets|Warriors|Lakers|Heat|Bucks|Kings|Spurs)\b/.test(team)) leagues.push('California Classic');
+    if (/\b(Hawks|Grizzlies|Thunder|Jazz)\b/.test(team)) leagues.push('Salt Lake City Summer League');
+    leagues.push('Vegas Summer League');
+    return leagues.join(', ');
+  }
+
   function render() {
     const meta = document.getElementById('metaInfo');
     meta.textContent = `${totalPlayers} player${totalPlayers === 1 ? '' : 's'} · ${totalTeams} teams · updated ${lastFetchTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
@@ -355,6 +366,7 @@
       html += `<section class="team-section">
         <header class="team-header">
           <span class="team-name">${escapeHTML(team)}</span>
+          <span class="team-leagues">(${escapeHTML(summerLeagues(team))})</span>
           <span class="team-count">${players.length} player${players.length === 1 ? '' : 's'}</span>
         </header>
         <div class="player-list">`;
